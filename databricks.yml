@@ -1,0 +1,29 @@
+# Databricks Asset Bundle for the GreenRoute pipeline.
+bundle:
+  name: greenroute_pipeline
+
+targets:
+  dev:
+    default: true
+    mode: development
+    workspace:
+      host: https://REPLACE-ME-dev.cloud.databricks.com
+      root_path: /Shared/greenroute_pipeline/dev
+    variables:
+      catalog: greenroute_dev
+
+  staging:
+    mode: development
+    workspace:
+      host: https://REPLACE-ME-staging.cloud.databricks.com
+      root_path: /Shared/greenroute_pipeline/staging
+    variables:
+      catalog: greenroute_staging
+
+  prod:
+    mode: production
+    workspace:
+      host: https://REPLACE-ME-prod.cloud.databricks.com
+      root_path: /Shared/greenroute_pipeline/prod
+    variables:
+      catalog: greenroute_prod

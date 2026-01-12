@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: pip install -e ".[dev]"
+
+      - name: Run tests
+        run: |
+          set +e
+          pytest
+          code=$?
+          # pytest exits 5 when it collects nothing. Early in a repository's life
+          # that is the truth, not a failure.
+          if [ $code -eq 5 ]; then
+            echo "No tests collected yet."
+            exit 0
+          fi
+          exit $code
+
+  openspec:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install OpenSpec
+        run: npm install -g @fission-ai/openspec@1.12.0
+
+      # A delta that does not parse, a requirement without SHALL, or a
+      # MODIFIED block that drops a scenario the current spec has: none
+      # of these merge. The spec is checked the way the code is.
+      - name: Validate specs and active changes
+        run: openspec validate --all --strict
+
+      - name: Archived changes have every task complete
+        run: openspec validate --archived
