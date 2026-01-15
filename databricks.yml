@@ -27,3 +27,10 @@ targets:
       root_path: /Shared/greenroute_pipeline/prod
     variables:
       catalog: greenroute_prod
+
+
+bundle:
+  name: greenroute-pipelines
+
+include:
+  - resources/*.yml
