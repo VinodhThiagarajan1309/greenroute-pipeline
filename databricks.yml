@@ -34,3 +34,35 @@ bundle:
 
 include:
   - resources/*.yml
+
+
+targets:
+  dev:
+    mode: development
+    workspace:
+      host: https://greenroute-dev.cloud.databricks.com
+      root_path: /Shared/greenroute/dev
+    variables:
+      catalog: greenroute_dev
+
+  staging:
+    mode: production
+    workspace:
+      host: https://greenroute-staging.cloud.databricks.com
+      root_path: /Shared/greenroute/staging
+    variables:
+      catalog: greenroute_staging
+
+  prod:
+    mode: production
+    workspace:
+      host: https://greenroute-prod.cloud.databricks.com
+      root_path: /Shared/greenroute/prod
+    variables:
+      catalog: greenroute_prod
+    permissions:
+      - level: CAN_MANAGE
+        group_name: data-platform-admins
+# Each target pins its own workspace.host above. There is no bundle-level
+# host anymore -- that was a single hardcoded workspace URL shared across
+# targets, which meant a dev bundle deploy could silently point at staging.
