@@ -25,3 +25,13 @@ Each layer SHALL live in its own Unity Catalog schema, one catalog per environme
 - **WHEN** each layer is exercised in a published window
 - **THEN** each layer SHALL live in its own Unity Catalog schema, one catalog per environment
 - **AND** the outcome is visible in the job's emitted metrics
+
+### Requirement: Every job: be defined as bundle configuration in the repo
+
+Every job SHALL be defined as bundle configuration in the repo; no job is configured through the workspace UI.
+
+#### Scenario: Be defined as bundle configuration in the repo
+
+- **WHEN** every job is exercised in a published window
+- **THEN** every job SHALL be defined as bundle configuration in the repo; no job is configured through the workspace UI
+- **AND** the outcome is visible in the job's emitted metrics
