@@ -42,3 +42,21 @@ def quarantine_booking_rows(bad_rows_df, reason):
     they are visible somewhere for review, instead of just being dropped
     with no trace."""
     return quarantine(bad_rows_df, "rejected_booking_events", reason=reason)
+
+
+def silver_booking_events(spark=None):
+    """bronze_booking_events -> silver_booking_events.
+
+    fix: rows with a null neighborhood_id used to be silently dropped by
+    an implicit filter. They are now quarantined explicitly instead, so
+    they stay visible in rejected_booking_events rather than vanishing.
+    """
+    spark = spark or spark_session()
+    bronze = read_table("bronze_booking_events")
+
+    bad = bronze.where(F.col("neighborhood_id").isNull())
+    good = bronze.where(F.col("neighborhood_id").isNotNull())
+
+    quarantine_booking_rows(bad, reason="null_neighborhood_id")
+    write_table(good, "silver_booking_events")
+    return good
