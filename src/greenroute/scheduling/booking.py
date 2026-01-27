@@ -35,3 +35,10 @@ def bronze_booking_events(spark=None):
     typed = spark.createDataFrame(raw.rdd, schema=BOOKING_EVENT_SCHEMA)
     write_table(typed, "bronze_booking_events")
     return typed
+
+
+def quarantine_booking_rows(bad_rows_df, reason):
+    """Write quarantined booking rows to a dedicated rejected-rows table so
+    they are visible somewhere for review, instead of just being dropped
+    with no trace."""
+    return quarantine(bad_rows_df, "rejected_booking_events", reason=reason)
