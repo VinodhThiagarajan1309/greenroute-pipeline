@@ -42,3 +42,32 @@ def to_billing_decimal(value):
     when the silver_service_catalog transform was first added; the
     billing system stores unit_price as DECIMAL(10,2) exactly."""
     return Decimal(str(value)).quantize(Decimal("0.01"))
+
+
+def build_catalog_row(
+    service_type_id,
+    display_name,
+    unit_price,
+    license_required,
+    zone_tier=None,
+    is_active=True,
+    effective_start=None,
+    effective_end=None,
+):
+    """Construct a service-catalog row.
+
+    license_required is always an explicit flag stored on the row - it is
+    never inferred from service_type_id or display_name. Renaming
+    "pesticide-application" to something else can never silently disable
+    the license gate, because the gate reads this flag, not the name.
+    """
+    return {
+        "service_type_id": service_type_id,
+        "display_name": display_name,
+        "unit_price": to_billing_decimal(unit_price),
+        "license_required": bool(license_required),
+        "zone_tier": zone_tier,
+        "is_active": is_active,
+        "effective_start": effective_start,
+        "effective_end": effective_end,
+    }
