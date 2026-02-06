@@ -71,3 +71,75 @@ def build_catalog_row(
         "effective_start": effective_start,
         "effective_end": effective_end,
     }
+
+
+# Backfilled zone -> pricing tier assignment for the zones GreenRoute
+# served as of sprint 2 (38 zones total; a representative subset is shown
+# here). New zones must be assigned a tier explicitly - there is no
+# default tier.
+ZONE_TIER_BY_ZONE = {
+    "zilker": "tier_1",
+    "mueller": "tier_1",
+    "circle_c": "tier_2",
+    "round_rock": "tier_2",
+    "pflugerville": "tier_2",
+    "hyde_park": "tier_1",
+    "south_congress": "tier_1",
+    "cedar_park": "tier_3",
+    "manor": "tier_3",
+    "del_valle": "tier_3",
+}
+
+
+def zone_tier_for(zone_id):
+    """Look up the pricing tier for a zone. Unknown zones are not
+    defaulted - callers must quarantine bookings whose zone has no tier
+    assignment rather than guess a tier."""
+    return ZONE_TIER_BY_ZONE.get(zone_id)
+
+
+class OverlappingActivePrice(Exception):
+    """Raised when two active price rows for the same (service_type_id,
+    zone_tier) have overlapping effective date ranges."""
+
+
+def _date_ranges_overlap(start_a, end_a, start_b, end_b):
+    end_a = end_a or datetime.max
+    end_b = end_b or datetime.max
+    return start_a < end_b and start_b < end_a
+
+
+def validate_no_overlapping_active_prices(price_rows):
+    """Reject AT WRITE TIME if two active price rows exist for the same
+    (service_type_id, zone_tier) with overlapping effective date ranges.
+    Exactly one active price per (service_type, zone_tier) is a hard
+    invariant.
+    """
+    by_key = {}
+    for row in price_rows:
+        if not row.get("is_active"):
+            continue
+        key = (row["service_type_id"], row["zone_tier"])
+        for other in by_key.get(key, []):
+            if _date_ranges_overlap(
+                row["effective_start"], row.get("effective_end"),
+                other["effective_start"], other.get("effective_end"),
+            ):
+                raise OverlappingActivePrice(key)
+        by_key.setdefault(key, []).append(row)
+    return price_rows
+
+
+def resolve_active_price(price_rows, service_type_id, zone_tier):
+    """Return the single active price row for (service_type_id, zone_tier)."""
+    matches = [
+        row for row in price_rows
+        if row["service_type_id"] == service_type_id
+        and row["zone_tier"] == zone_tier
+        and row.get("is_active")
+    ]
+    if not matches:
+        raise UnknownServiceType((service_type_id, zone_tier))
+    if len(matches) > 1:
+        raise OverlappingActivePrice((service_type_id, zone_tier))
+    return matches[0]
