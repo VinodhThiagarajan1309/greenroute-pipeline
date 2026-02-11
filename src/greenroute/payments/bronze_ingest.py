@@ -40,3 +40,19 @@ def ingest_bronze_payment_events(webhook_batch_df, spark=None):
     accepted_df = spark.createDataFrame(accepted, schema=bronze_payment_events_schema())
     write_table(accepted_df, "bronze_payment_events", mode="append")
     return accepted_df
+
+
+def validate_webhook_payload(payload):
+    """Reject a webhook payload that is missing provider_event_id.
+
+    We never synthesise a surrogate key for it. A payload we can't
+    positively identify can't be made idempotent downstream, so it can't be
+    safely accepted at all -- it is quarantined, not defaulted or dropped.
+    """
+    if not payload.get("provider_event_id"):
+        return False, "missing provider_event_id"
+    if not payload.get("event_type"):
+        return False, "missing event_type"
+    if payload.get("amount_cents") is None:
+        return False, "missing amount_cents"
+    return True, None
