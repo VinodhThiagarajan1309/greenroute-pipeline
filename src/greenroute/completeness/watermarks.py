@@ -42,3 +42,40 @@ def watermark_table_row(source, measured_lateness_minutes, watermark_hours):
 def watermark_closes_at(window_end, watermark_hours):
     """The instant a source's watermark for a window closes."""
     return window_end + timedelta(hours=watermark_hours)
+
+
+def derive_watermark_hours(measured_max_minutes, round_to_hours=12):
+    """Derive a watermark from a MEASURED max lateness, never an assumed one.
+
+    Round the measured max lateness up to the next `round_to_hours` boundary.
+    For bronze_booking_cancellations the measured max was 36h12m; rounded up
+    to the next 12h boundary that is 48h, which is also comfortably above the
+    measured p99 of 11h.
+    """
+    hours = measured_max_minutes / 60.0
+    boundaries = int(hours // round_to_hours)
+    if hours % round_to_hours:
+        boundaries += 1
+    return round_to_hours * boundaries
+
+
+def watermark_has_headroom(watermark_hours, measured_p99_minutes, measured_max_minutes):
+    """A watermark must clear both the measured p99 and the measured max."""
+    watermark_minutes = watermark_hours * 60
+    return watermark_minutes > measured_p99_minutes and watermark_minutes >= measured_max_minutes
+
+
+# Derived from BOOKING_CANCELLATION_LATENESS_MINUTES above: measured p99 was
+# 11h, measured max was 36h12m -- caused by the mobile app queueing offline
+# cancellations in dead zones (Circle C worst) until the phone regains
+# signal. 48h is the observed max rounded up to the next 12h boundary.
+CANCELLATION_WATERMARK_HOURS = derive_watermark_hours(
+    BOOKING_CANCELLATION_LATENESS_MINUTES["max"]
+)
+
+assert CANCELLATION_WATERMARK_HOURS == 48
+assert watermark_has_headroom(
+    CANCELLATION_WATERMARK_HOURS,
+    BOOKING_CANCELLATION_LATENESS_MINUTES["p99"],
+    BOOKING_CANCELLATION_LATENESS_MINUTES["max"],
+)
