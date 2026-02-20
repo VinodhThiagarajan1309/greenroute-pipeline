@@ -143,3 +143,29 @@ def resolve_active_price(price_rows, service_type_id, zone_tier):
     if len(matches) > 1:
         raise OverlappingActivePrice((service_type_id, zone_tier))
     return matches[0]
+
+
+def attach_addon_to_booking(addon_row, booking_id, quantity=1):
+    """Attach a catalog add-on to a booking, freezing its price at the
+    moment of attachment.
+
+    Add-ons attach to a BOOKING, never to a service type, and this frozen
+    amount is what gets billed - later changes to addon_row's unit_price
+    must never rewrite history.
+    """
+    frozen_unit_price = to_billing_decimal(addon_row["unit_price"])
+    return {
+        "booking_id": booking_id,
+        "addon_type_id": addon_row["addon_type_id"],
+        "frozen_unit_price": frozen_unit_price,
+        "quantity": quantity,
+        "frozen_amount": (frozen_unit_price * quantity).quantize(Decimal("0.01")),
+    }
+
+
+def billable_addon_amount(booking_addon, booking_status):
+    """An add-on on a cancelled booking is not billed, regardless of its
+    frozen price."""
+    if booking_status == "cancelled":
+        return Decimal("0.00")
+    return booking_addon["frozen_amount"]
