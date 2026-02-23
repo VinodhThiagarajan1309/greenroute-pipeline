@@ -69,3 +69,44 @@ def evaluate_window_closure(source_watermarks, window_end, now, override_reason=
         )
 
     return GateResult(allowed=False, blocking_sources=still_open)
+
+
+BLOCKED_METRIC = "completeness.gate.blocked"
+OVERRIDDEN_METRIC = "completeness.gate.overridden"
+
+
+def emit_gate_metric(gate_result, window_end, emit=None):
+    """Emit the metric that makes this gate observable.
+
+    A blocked publish emits BLOCKED_METRIC, once per blocking source, so we
+    can see how often the gate actually fires and which source is at fault.
+    A manual override emits the DISTINCT metric OVERRIDDEN_METRIC, tagged
+    with the override reason, so an override is never invisible. `emit` is
+    injected so this stays a pure function under test -- it defaults to a
+    no-op collector and always returns the events it built.
+    """
+    events = []
+
+    def _emit(metric_name, tags):
+        event = {"metric": metric_name, "tags": tags}
+        events.append(event)
+        if emit is not None:
+            emit(metric_name, tags)
+
+    if gate_result.overridden:
+        _emit(
+            OVERRIDDEN_METRIC,
+            {
+                "window_end": str(window_end),
+                "blocking_sources": list(gate_result.blocking_sources),
+                "reason": gate_result.override_reason,
+            },
+        )
+    elif not gate_result.allowed:
+        for source in gate_result.blocking_sources:
+            _emit(
+                BLOCKED_METRIC,
+                {"window_end": str(window_end), "source": source},
+            )
+
+    return events
