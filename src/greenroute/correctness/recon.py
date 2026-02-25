@@ -46,3 +46,20 @@ def compare_rows(incremental_rows, batch_rows, key_fields, value_fields):
             mismatches.append({"key": key, "kind": "value_mismatch", "diffs": diffs})
 
     return mismatches
+
+
+def run_recon(table_name, incremental_rows, batch_rows, key_fields, value_fields):
+    """Run one incremental-vs-batch parity check and return its full result.
+
+    Pure function: callers are responsible for fetching `incremental_rows`
+    (the already-published gold rows) and `batch_rows` (a full recompute of
+    the same window) -- no Spark session or I/O happens in here.
+    """
+    mismatches = compare_rows(incremental_rows, batch_rows, key_fields, value_fields)
+    return {
+        "table": table_name,
+        "incremental_row_count": len(incremental_rows),
+        "batch_row_count": len(batch_rows),
+        "mismatch_count": len(mismatches),
+        "mismatches": mismatches,
+    }
