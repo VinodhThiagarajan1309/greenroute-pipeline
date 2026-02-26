@@ -26,3 +26,35 @@ def plan_backfill_merge(existing_records, incoming_records):
     for record in incoming_records:
         merged[event_key(record)] = record
     return list(merged.values())
+
+
+def assert_row_count_not_decreased(before_count, after_count, partition):
+    """Anything that gates or blocks must emit a metric saying it fired."""
+    if after_count < before_count:
+        print(
+            "METRIC backfill_row_count_guard_fired=1 partition=%s before=%d after=%d"
+            % (partition, before_count, after_count)
+        )
+        raise ValueError(
+            "backfill for partition %s would reduce row count from %d to %d"
+            % (partition, before_count, after_count)
+        )
+    return True
+
+
+def run_backfill_merge(spark, table_name, partition, incoming_records):
+    """Spark entry point: MERGE incoming_records into table_name on event_key.
+
+    Never overwrites the partition wholesale -- that's the bug this
+    replaced.
+    """
+    from greenroute.common import read_table, write_table
+
+    existing_df = read_table(spark, table_name).filter("settlement_date = '%s'" % partition)
+    existing_records = [r.asDict() for r in existing_df.collect()]
+    before_count = len(existing_records)
+    merged_records = plan_backfill_merge(existing_records, incoming_records)
+    assert_row_count_not_decreased(before_count, len(merged_records), partition)
+    merged_df = spark.createDataFrame(merged_records)
+    write_table(merged_df, table_name, mode="overwrite", partition_by=["settlement_date"])
+    return merged_df
