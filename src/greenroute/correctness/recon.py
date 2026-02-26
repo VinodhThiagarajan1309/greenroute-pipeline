@@ -63,3 +63,20 @@ def run_recon(table_name, incremental_rows, batch_rows, key_fields, value_fields
         "mismatch_count": len(mismatches),
         "mismatches": mismatches,
     }
+
+
+def recon_result_row(recon_result, checked_at):
+    """Build one row of the recon result table: per-check row counts.
+
+    This is what gets written to the recon result table so dashboards can
+    show, per table and per run, how many rows were checked on each side and
+    how many mismatched -- not just a final pass/fail.
+    """
+    return {
+        "table": recon_result["table"],
+        "checked_at": checked_at,
+        "incremental_row_count": recon_result["incremental_row_count"],
+        "batch_row_count": recon_result["batch_row_count"],
+        "mismatch_count": recon_result["mismatch_count"],
+        "status": "FAIL" if recon_result["mismatch_count"] else "PASS",
+    }
