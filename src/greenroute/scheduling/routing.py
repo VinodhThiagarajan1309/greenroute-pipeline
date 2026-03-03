@@ -32,3 +32,20 @@ def order_stops_by_distance(stops):
         remaining.sort(key=lambda s: _haversine_km(last["lat"], last["lon"], s["lat"], s["lon"]))
         ordered.append(remaining.pop(0))
     return ordered
+
+
+def order_stops_by_drive_time(stops, drive_time_minutes):
+    """Order stops using actual drive time between them (drive_time_minutes
+    is a {(from_stop_id, to_stop_id): minutes} lookup from the routing
+    provider), not haversine distance - straight-line distance ignores
+    roads, one-ways and I-35 traffic and produced bad routes.
+    """
+    if not stops:
+        return []
+    ordered = [stops[0]]
+    remaining = list(stops[1:])
+    while remaining:
+        last_id = ordered[-1]["stop_id"]
+        remaining.sort(key=lambda s: drive_time_minutes[(last_id, s["stop_id"])])
+        ordered.append(remaining.pop(0))
+    return ordered
