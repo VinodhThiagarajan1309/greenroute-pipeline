@@ -20,3 +20,22 @@ def reschedule_booking_as_cancel_and_rebook(booking, new_service_window_start):
     new_booking["service_window_start"] = new_service_window_start
     new_booking["status"] = "confirmed"
     return cancelled, new_booking
+
+
+def reschedule_booking(booking, new_service_window_start, rescheduled_at):
+    """Reschedule in place: update the booking row and keep a full audit
+    trail of why/when it moved, instead of cancel+rebook (which lost the
+    link between the old and new booking).
+    """
+    updated = dict(booking)
+    previous_window_start = updated["service_window_start"]
+    updated["service_window_start"] = new_service_window_start
+    updated["status"] = "confirmed"
+    history = list(updated.get("reschedule_history") or [])
+    history.append({
+        "previous_service_window_start": previous_window_start,
+        "new_service_window_start": new_service_window_start,
+        "rescheduled_at": rescheduled_at,
+    })
+    updated["reschedule_history"] = history
+    return updated
