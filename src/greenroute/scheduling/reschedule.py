@@ -39,3 +39,24 @@ def reschedule_booking(booking, new_service_window_start, rescheduled_at):
     })
     updated["reschedule_history"] = history
     return updated
+
+
+def reschedule_booking_and_invalidate_route(booking, route_assignment, new_service_window_start, rescheduled_at):
+    """Reschedule a booking AND invalidate its derived route-assignment
+    state.
+
+    fix: the sprint-5 bug was that reschedule updated only the booking row
+    and left the old route_assignment row in place, so a crew was still
+    dispatched for a job that had moved (two crews drove to Zilker for a
+    job moved to Thursday). Route assignment is derived state - any
+    reschedule must explicitly invalidate it, not just update the booking.
+    """
+    updated_booking = reschedule_booking(booking, new_service_window_start, rescheduled_at)
+    invalidated_route_assignment = None
+    if route_assignment is not None and route_assignment.get("status") == "assigned" \
+            and route_assignment.get("booking_id") == booking["booking_id"]:
+        invalidated_route_assignment = dict(route_assignment)
+        invalidated_route_assignment["status"] = "invalidated"
+        invalidated_route_assignment["invalidated_reason"] = "booking_rescheduled"
+        invalidated_route_assignment["invalidated_at"] = rescheduled_at
+    return updated_booking, invalidated_route_assignment
