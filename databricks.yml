@@ -66,3 +66,17 @@ targets:
 # Each target pins its own workspace.host above. There is no bundle-level
 # host anymore -- that was a single hardcoded workspace URL shared across
 # targets, which meant a dev bundle deploy could silently point at staging.
+
+
+resources:
+  jobs:
+    zone_routing_job:
+      name: zone-routing-job
+      tasks:
+        - task_key: run_zone_routing
+          python_wheel_task:
+            package_name: greenroute
+            entry_point: run_zone_routing_job
+          # no routing_strategy parameter -- zone grouping and stop
+          # ordering now live in scheduling, not in job config. Squashes
+          # the migration and the config-knob removal into one commit.
