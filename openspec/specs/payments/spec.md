@@ -65,3 +65,13 @@ Total refunded amount for a capture SHALL NOT exceed the captured amount.
 - **WHEN** total refunded amount for a capture is exercised in a published window
 - **THEN** total refunded amount for a capture SHALL NOT exceed the captured amount
 - **AND** the outcome is visible in the job's emitted metrics
+
+### Requirement: Refund auto-approval: read the cancellation chargeable/free determination from scheduling
+
+Refund auto-approval SHALL read the cancellation chargeable/free determination from scheduling and SHALL NOT hold an independently configured threshold.
+
+#### Scenario: Read the cancellation chargeable/free determination from scheduling
+
+- **WHEN** refund auto-approval is exercised in a published window
+- **THEN** refund auto-approval SHALL read the cancellation chargeable/free determination from scheduling and SHALL NOT hold an independently configured threshold
+- **AND** the outcome is visible in the job's emitted metrics
