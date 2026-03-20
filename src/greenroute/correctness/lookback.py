@@ -24,3 +24,24 @@ def rows_in_window(rows, window_start, window_end, timestamp_field):
         row for row in rows
         if window_start <= row[timestamp_field] < window_end
     ]
+
+
+from greenroute.completeness.watermarks import CANCELLATION_WATERMARK_HOURS
+
+# 72h: strictly wider than the 48h completeness watermark, with headroom.
+# The bare minimum that would still be correct is 49h (one hour past the
+# watermark); 72h is chosen so recon isn't sitting exactly on the boundary
+# where a single late-arriving row flips which side of the window it lands on.
+RECON_LOOKBACK_HOURS = 72
+
+
+def lookback_is_wider_than_watermark(lookback_hours=RECON_LOOKBACK_HOURS,
+                                      watermark_hours=CANCELLATION_WATERMARK_HOURS):
+    """Guard: the incremental lookback must stay strictly wider than the
+    completeness watermark, or recon and completeness disagree about
+    whether a window is done.
+    """
+    return lookback_hours > watermark_hours
+
+
+assert lookback_is_wider_than_watermark()
