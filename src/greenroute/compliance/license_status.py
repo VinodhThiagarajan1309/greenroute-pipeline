@@ -48,3 +48,26 @@ def build_silver_technician_compliance(bronze_tda_df, technician_df, as_of_date)
     )
     write_table(resolved, "silver_technician_compliance", mode="overwrite")
     return resolved
+
+
+# Match technicians to TDA records by license number, not name -- name
+# matching produced silent false negatives on hyphenated and maiden names
+# during the sprint 6 pilot.
+
+def match_technician_to_license(technician_record, tda_records_by_license):
+    """Match one technician to their TDA licensee record by license_number."""
+    license_number = technician_record.get("license_number")
+    if not license_number:
+        return None
+    return tda_records_by_license.get(license_number)
+
+
+def match_technicians_to_licenses(technician_records, tda_records):
+    """Batch version of match_technician_to_license."""
+    by_license = {
+        r["license_number"]: r for r in tda_records if r.get("license_number")
+    }
+    return {
+        tech["technician_id"]: match_technician_to_license(tech, by_license)
+        for tech in technician_records
+    }
