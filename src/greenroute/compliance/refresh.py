@@ -45,3 +45,25 @@ def compute_next_refresh_at(license_number, last_refreshed_at, ttl_seconds=DEFAU
     if candidate <= last_refreshed_at:
         candidate += dt.timedelta(seconds=ttl_seconds)
     return candidate
+
+
+def is_stale(last_refreshed_at, as_of, ttl_seconds=DEFAULT_TTL_SECONDS):
+    """True when cached TDA data is older than its TTL as of `as_of`.
+
+    Staleness is judged purely by TTL elapsed, never by trusting whatever
+    is cached -- a technician whose license data hasn't been refreshed
+    within its TTL is flagged stale even if the cached status still says
+    active.
+    """
+    age_seconds = (as_of - last_refreshed_at).total_seconds()
+    return age_seconds > ttl_seconds
+
+
+def build_stale_license_metric(license_number, technician_id, age_seconds):
+    """Pure metric-emission payload for a stale-license flag firing."""
+    return {
+        "metric": "license_data_stale",
+        "license_number": license_number,
+        "technician_id": technician_id,
+        "age_seconds": age_seconds,
+    }
