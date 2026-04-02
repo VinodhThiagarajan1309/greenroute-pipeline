@@ -23,3 +23,14 @@ def classify_failure(failure_type):
     if failure_type in TRANSIENT_INFRA_FAILURE_TYPES:
         return FAILURE_CLASS_RETRYABLE
     return FAILURE_CLASS_FATAL
+
+
+def evaluate_gate_failure(failure_type):
+    """A failed completeness or correctness gate is always fatal -- retrying
+    would fail identically and only delay the page by however long the
+    retry backoff takes.
+    """
+    if failure_type not in GATE_FAILURE_TYPES:
+        return None
+    print("METRIC gate_failure_classified_fatal=1 failure_type=%s" % failure_type)
+    return FAILURE_CLASS_FATAL
