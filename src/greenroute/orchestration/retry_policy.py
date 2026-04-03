@@ -34,3 +34,20 @@ def evaluate_gate_failure(failure_type):
         return None
     print("METRIC gate_failure_classified_fatal=1 failure_type=%s" % failure_type)
     return FAILURE_CLASS_FATAL
+
+
+MAX_RETRIES = 3
+BACKOFF_SECONDS = (30, 120, 300)
+
+
+def retry_plan(failure_type, attempt_number):
+    """Pure: given a failure and how many attempts already made, what to do next.
+
+    Returns a dict with should_retry / delay_seconds / page_now.
+    """
+    failure_class = classify_failure(failure_type)
+    if failure_class == FAILURE_CLASS_FATAL:
+        return {"should_retry": False, "delay_seconds": 0, "page_now": True}
+    if attempt_number >= MAX_RETRIES:
+        return {"should_retry": False, "delay_seconds": 0, "page_now": True}
+    return {"should_retry": True, "delay_seconds": BACKOFF_SECONDS[attempt_number], "page_now": False}
