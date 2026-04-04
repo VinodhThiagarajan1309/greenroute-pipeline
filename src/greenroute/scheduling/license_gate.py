@@ -30,3 +30,30 @@ def gate_licensed_service_booking(service_type, technician_license_status, licen
     if technician_license_status == "active":
         return True, "license_active"
     return False, "license_not_active"
+
+
+def build_license_gate_blocked_metric(technician_id, service_type, reason):
+    """Pure metric payload for when the license gate blocks a booking.
+
+    Anything that gates or blocks must emit a metric saying it fired --
+    this is that metric for the pesticide-license hard gate.
+    """
+    return {
+        "metric": "license_gate_blocked",
+        "technician_id": technician_id,
+        "service_type": service_type,
+        "reason": reason,
+    }
+
+
+def evaluate_booking_and_metric(service_type, technician_id, technician_license_status, license_service_reachable):
+    """Convenience wrapper: gate decision plus the metric payload to emit
+    if the booking is blocked.
+    """
+    allowed, reason = gate_licensed_service_booking(
+        service_type, technician_license_status, license_service_reachable
+    )
+    metric = None
+    if not allowed:
+        metric = build_license_gate_blocked_metric(technician_id, service_type, reason)
+    return allowed, reason, metric

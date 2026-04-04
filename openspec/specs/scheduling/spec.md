@@ -85,3 +85,23 @@ Stop distance used for ordering SHALL be computed as drive time, not straight-li
 - **WHEN** stop distance used for ordering is exercised in a published window
 - **THEN** stop distance used for ordering SHALL be computed as drive time, not straight-line distance
 - **AND** the outcome is visible in the job's emitted metrics
+
+### Requirement: Scheduling: reject confirmation of a licensed-service booking
+
+Scheduling SHALL reject confirmation of a licensed-service booking when the assigned technician's license_status is not active.
+
+#### Scenario: Reject confirmation of a licensed-service booking when the assigned
+
+- **WHEN** scheduling is exercised in a published window
+- **THEN** scheduling SHALL reject confirmation of a licensed-service booking when the assigned technician's license_status is not active
+- **AND** the outcome is visible in the job's emitted metrics
+
+### Requirement: Blocked confirmation: emit a metric identifying the technician and service
+
+A blocked confirmation SHALL emit a metric identifying the technician and service.
+
+#### Scenario: Emit a metric identifying the technician and service
+
+- **WHEN** a blocked confirmation is exercised in a published window
+- **THEN** a blocked confirmation SHALL emit a metric identifying the technician and service
+- **AND** the outcome is visible in the job's emitted metrics
