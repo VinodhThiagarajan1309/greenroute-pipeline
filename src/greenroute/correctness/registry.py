@@ -34,3 +34,11 @@ GOLD_TABLE_REGISTRY["gold_service_catalog"] = {
     "timestamp_field": "updated_at",
     "partition_column": "updated_date",
 }
+
+
+GOLD_TABLE_REGISTRY["gold_payment_ledger"] = {
+    "key_fields": ["payment_id"],
+    "value_fields": ["amount_cents", "provider_event_id", "settlement_status"],
+    "timestamp_field": "settlement_date",
+    "partition_column": "settlement_date",
+}
