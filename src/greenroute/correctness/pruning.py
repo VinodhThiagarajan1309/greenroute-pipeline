@@ -18,3 +18,21 @@ def batch_scan_predicate(window_start, window_end):
         "start": window_start,
         "end": window_end,
     }
+
+
+def estimate_scan_bytes(row_count, avg_row_bytes):
+    """Rough scan-bytes-read estimate for one recon run, so the pruning win
+    (or, later, a pruning bug) is visible on the recon dashboard instead of
+    only in row counts.
+    """
+    return row_count * avg_row_bytes
+
+
+def scan_bytes_metric_row(table_name, predicate, row_count, avg_row_bytes):
+    return {
+        "table": table_name,
+        "predicate_column": predicate["column"],
+        "predicate_start": predicate["start"],
+        "predicate_end": predicate["end"],
+        "scan_bytes_read": estimate_scan_bytes(row_count, avg_row_bytes),
+    }
