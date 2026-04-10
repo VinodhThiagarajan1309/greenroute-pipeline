@@ -8,16 +8,6 @@ scan to the date range recon actually needs.
 from __future__ import annotations
 
 
-def batch_scan_predicate(window_start, window_end):
-    """Predicate for the batch-side scan, bounded to the affected window.
-
-    NOTE: this predicate is built against `event_date` for every table.
-    """
-    return {
-        "column": "event_date",
-        "start": window_start,
-        "end": window_end,
-    }
 
 
 def estimate_scan_bytes(row_count, avg_row_bytes):
@@ -36,3 +26,16 @@ def scan_bytes_metric_row(table_name, predicate, row_count, avg_row_bytes):
         "predicate_end": predicate["end"],
         "scan_bytes_read": estimate_scan_bytes(row_count, avg_row_bytes),
     }
+
+
+def batch_scan_predicate(window_start, window_end, partition_column=None):
+    """Reverted: the pruning predicate here was built against `event_date`
+    unconditionally. gold_payment_ledger is partitioned on settlement_date,
+    so the predicate matched nothing on that table -- both sides of the
+    comparison came back empty, and parity trivially "passed" for four days
+    (Apr 4 - Apr 8) because nothing was actually compared.
+
+    Reverted to no pruning (full scan) until pruning can be made
+    partition-aware per table.
+    """
+    return None
