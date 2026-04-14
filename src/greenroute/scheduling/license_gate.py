@@ -44,7 +44,6 @@ pending renewal that TDA still honours.
 """
 import datetime as dt
 
-LICENSE_REQUIRED_SERVICES = frozenset({"pesticide_application"})
 
 # TDA keeps an applicator legal for this long after expiry, provided the
 # renewal was filed on or before the expiry date.
@@ -64,19 +63,35 @@ def within_renewal_grace(renewal_filed_date, expiry_date, booking_date):
     return booking_date <= expiry_date + dt.timedelta(days=TDA_RENEWAL_GRACE_DAYS)
 
 
+LICENSE_REQUIRED_SERVICES = frozenset({
+    # Kept only as the fallback for callers that still pass a bare
+    # service_type_id string. The gate reads the catalog row's
+    # license_required flag whenever it is given the row.
+    "pesticide_application",
+    "herbicide_application",
+    "fertilizer_application",
+})
+
+
+def _license_required(service_type):
+    if isinstance(service_type, dict):
+        return bool(service_type.get("license_required"))
+    return service_type in LICENSE_REQUIRED_SERVICES
+
+
 def gate_licensed_service_booking(service_type, technician_license_status, license_service_reachable,
                                   renewal_filed_date=None, expiry_date=None, booking_date=None):
     """Decide whether a booking may be confirmed.
 
-    Blocks confirmation of a licensed service unless the technician's
-    license_status is "active", or is "pending_renewal" inside the TDA
-    grace window.
+    `service_type` is a catalog row (preferred) or a service_type_id. The
+    gate reads the row's license_required flag; it does not know service
+    names. Blocks unless license_status is "active", or "pending_renewal"
+    inside the TDA grace window.
 
-    OPEN QUESTION (deliberately unresolved): if the TDA license service is
-    unreachable at write time this FAILS OPEN. Product/legal has not
-    decided fail-open vs fail-closed. Do not change silently.
+    OPEN QUESTION (deliberately unresolved): an unreachable TDA lookup
+    FAILS OPEN. Product/legal has not decided. Do not change silently.
     """
-    if service_type not in LICENSE_REQUIRED_SERVICES:
+    if not _license_required(service_type):
         return True, "service_not_licensed"
     if not license_service_reachable:
         return True, "license_service_unreachable_failed_open"
