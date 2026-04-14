@@ -65,3 +65,23 @@ Each gold table covered by parity SHALL have its own seeded-mismatch test; cover
 - **WHEN** each gold table covered by parity is exercised in a published window
 - **THEN** each gold table covered by parity SHALL have its own seeded-mismatch test; coverage of one table SHALL NOT be assumed to cover another
 - **AND** the outcome is visible in the job's emitted metrics
+
+### Requirement: Parity comparison in which both sides: be reported as INCONCLUSIVE
+
+A parity comparison in which both sides read zero rows SHALL be reported as INCONCLUSIVE, and SHALL NOT be reported as PASS.
+
+#### Scenario: Be reported as INCONCLUSIVE
+
+- **WHEN** a parity comparison in which both sides read zero rows is exercised in a published window
+- **THEN** a parity comparison in which both sides read zero rows SHALL be reported as INCONCLUSIVE, and SHALL NOT be reported as PASS
+- **AND** the outcome is visible in the job's emitted metrics
+
+### Requirement: Any change to a parity check's: be accompanied by a seeded-mismatch test exercised
+
+Any change to a parity check's scan filtering SHALL be accompanied by a seeded-mismatch test exercised against the filtered path, for the specific table being changed.
+
+#### Scenario: Be accompanied by a seeded-mismatch test exercised
+
+- **WHEN** any change to a parity check's scan filtering is exercised in a published window
+- **THEN** any change to a parity check's scan filtering SHALL be accompanied by a seeded-mismatch test exercised against the filtered path, for the specific table being changed
+- **AND** the outcome is visible in the job's emitted metrics
