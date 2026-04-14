@@ -169,3 +169,21 @@ def billable_addon_amount(booking_addon, booking_status):
     if booking_status == "cancelled":
         return Decimal("0.00")
     return booking_addon["frozen_amount"]
+
+
+# Every service type declares license_required explicitly. The scheduling
+# gate reads this flag and nothing else, so adding a licensed service is a
+# catalog row, never a scheduling change.
+LICENSED_SERVICE_TYPES = ("pesticide_application", "herbicide_application", "fertilizer_application")
+
+
+def seed_service_type_rows():
+    """Catalog seed rows with the licence flag set per TDA rules."""
+    rows = [
+        ("mowing", "Lawn mowing", "45.00", False),
+        ("mulching", "Mulching", "80.00", False),
+        ("pesticide_application", "Pesticide application", "120.00", True),
+        ("herbicide_application", "Herbicide application", "95.00", True),
+        ("fertilizer_application", "Fertilizer application", "70.00", True),
+    ]
+    return [build_catalog_row(sid, name, price, lic) for sid, name, price, lic in rows]
