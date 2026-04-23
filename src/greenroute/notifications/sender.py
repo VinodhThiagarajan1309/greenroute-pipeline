@@ -43,3 +43,26 @@ def register_provider(channel, provider_send):
 
 def get_provider(channel):
     return PROVIDER_REGISTRY.get(channel)
+
+
+class NotificationSender(object):
+    """Provider-agnostic notification sending interface.
+
+    Provider assumptions never leak past this class: callers pass a
+    channel and a rendered message; send() looks up the registered
+    provider for that channel and refuses delivery to any opted-out
+    recipient before it ever reaches a provider.
+    """
+
+    def send(self, recipient_id, channel, message, preferences_by_customer_channel):
+        if not is_opted_in(recipient_id, channel, preferences_by_customer_channel):
+            return {"sent": False, "reason": "opted_out"}
+        provider_send = get_provider(channel)
+        if provider_send is None:
+            return {"sent": False, "reason": "no_provider_registered_for_channel"}
+        result = provider_send(recipient_id, message)
+        reason = "sent" if result.get("ok") else "provider_error"
+        return {"sent": bool(result.get("ok")), "reason": reason}
+
+
+DEFAULT_SENDER = NotificationSender()
