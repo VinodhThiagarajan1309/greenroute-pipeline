@@ -28,3 +28,18 @@ def send(recipient_id, channel, message, preferences_by_customer_channel, provid
     result = provider_send(recipient_id, message)
     reason = "sent" if result.get("ok") else "provider_error"
     return {"sent": bool(result.get("ok")), "reason": reason}
+
+
+# Add provider registry keyed by channel. Provider assumptions (Twilio,
+# or anything else) must not leak into the capability -- callers only ever
+# deal in channels.
+PROVIDER_REGISTRY = {}
+
+
+def register_provider(channel, provider_send):
+    """Register a provider_send callable(recipient, message) -> dict for a channel."""
+    PROVIDER_REGISTRY[channel] = provider_send
+
+
+def get_provider(channel):
+    return PROVIDER_REGISTRY.get(channel)
