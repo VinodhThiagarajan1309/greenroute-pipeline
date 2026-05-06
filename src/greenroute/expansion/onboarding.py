@@ -49,3 +49,39 @@ def onboard_zone(zone, zips, effective_date, pricing_by_service):
         for service, tier in pricing_by_service.items()
     ]
     return {"registry_rows": registry_rows, "pricing_rows": pricing_rows}
+
+
+MIN_TECHNICIANS_PER_ZONE = 2
+
+
+def check_technician_coverage(zone, technician_count, min_technicians=MIN_TECHNICIANS_PER_ZONE):
+    """Gate: a zone is not onboarding-complete without enough technician
+    coverage. Emits a metric when it blocks, per house style.
+    """
+    if technician_count >= min_technicians:
+        return True, None
+    return False, build_coverage_gate_metric(zone, technician_count, min_technicians)
+
+
+def build_coverage_gate_metric(zone, technician_count, min_technicians):
+    return {
+        "metric": "onboarding_blocked_insufficient_coverage",
+        "zone": zone,
+        "technician_count": technician_count,
+        "min_technicians": min_technicians,
+    }
+
+
+def verify_zone_onboarded(zone, zips_registered, pricing_rows, technician_count, min_technicians=MIN_TECHNICIANS_PER_ZONE):
+    """Final verify step: zips registered, pricing assigned for every
+    service, and technician coverage confirmed.
+    """
+    coverage_ok, coverage_metric = check_technician_coverage(zone, technician_count, min_technicians)
+    return {
+        "zone": zone,
+        "zips_registered": bool(zips_registered),
+        "pricing_assigned": bool(pricing_rows),
+        "technician_coverage_ok": coverage_ok,
+        "onboarded": bool(zips_registered) and bool(pricing_rows) and coverage_ok,
+        "coverage_metric": coverage_metric,
+    }
