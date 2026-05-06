@@ -47,3 +47,31 @@ def find_source_disagreements(registry_by_zip, other_source_by_zip):
                 "other_source_zone": other_zone,
             })
     return disagreements
+
+
+def seed_registry_from_routing_dict(routing_zip_to_zone, effective_date):
+    """Turn the routing module's hardcoded zip->zone dict into
+    zone_registry rows. That dict is today's de facto source of truth;
+    seeding from it gives zone_registry a starting point before
+    reconciliation replaces it entirely (see
+    expansion-zip-onboarding-workflow).
+    """
+    return [
+        {
+            "zip": zip_code,
+            "zone": zone,
+            "effective_date": effective_date,
+            "source_note": "seeded_from_routing_module_dict",
+        }
+        for zip_code, zone in routing_zip_to_zone.items()
+    ]
+
+
+def write_zone_registry(spark_rows):
+    """Spark wrapper: write seeded/updated rows into the zone_registry table."""
+    from greenroute.common import spark_session, write_table
+
+    spark = spark_session()
+    df = spark.createDataFrame(spark_rows, schema=zone_registry_schema())
+    write_table(df, "zone_registry", mode="merge", key="zip")
+    return df
