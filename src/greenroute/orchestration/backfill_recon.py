@@ -42,7 +42,15 @@ def diff_by_event_key(before_records, after_records, event_key_field, value_fiel
 
 
 def value_parity_check(before_records, after_records, event_key_field, value_fields):
-    """Recon verdict using value parity, not just row count."""
+    """Recon verdict using value parity, not just row count.
+
+    An empty-vs-empty comparison used to report PASS -- that's not evidence
+    the backfill worked, it's evidence recon had nothing to compare. Report
+    INCONCLUSIVE instead so it can never be mistaken for a real pass.
+    """
+    if not before_records and not after_records:
+        print("METRIC backfill_recon_fired=1 verdict=INCONCLUSIVE")
+        return RECON_INCONCLUSIVE
     diff = diff_by_event_key(before_records, after_records, event_key_field, value_fields)
     if diff["changed_keys"] or diff["missing_keys"]:
         print(
