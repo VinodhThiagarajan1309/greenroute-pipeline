@@ -75,3 +75,20 @@ def write_zone_registry(spark_rows):
     df = spark.createDataFrame(spark_rows, schema=zone_registry_schema())
     write_table(df, "zone_registry", mode="merge", key="zip")
     return df
+
+
+def migrate_legacy_mapping_to_registry(legacy_zip_to_zone, effective_date, source_note="migrated_from_legacy_sources"):
+    """Migrate a legacy zip->zone mapping (the routing dict, or the DAB
+    CSV) into zone_registry rows. zone_registry is now the single source
+    of truth for zip -> zone; this is the one-time migration path, not an
+    ongoing sync.
+    """
+    return [
+        {
+            "zip": zip_code,
+            "zone": zone,
+            "effective_date": effective_date,
+            "source_note": source_note,
+        }
+        for zip_code, zone in legacy_zip_to_zone.items()
+    ]
