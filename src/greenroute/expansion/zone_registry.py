@@ -92,3 +92,32 @@ def migrate_legacy_mapping_to_registry(legacy_zip_to_zone, effective_date, sourc
         }
         for zip_code, zone in legacy_zip_to_zone.items()
     ]
+
+
+# The 4 zips where the old routing dict / DAB CSV disagreed with ops'
+# spreadsheet, all in the Round Rock / Pflugerville seam -- exactly where
+# GreenRoute is expanding. Ops' spreadsheet is authoritative here.
+SEAM_ZIP_RESOLUTIONS = {
+    "78664": "pflugerville",
+    "78665": "round_rock",
+    "78681": "pflugerville",
+    "78660": "pflugerville",
+}
+
+
+def apply_seam_reconciliation(registry_rows, effective_date):
+    """Overwrite the seam zips' zone with the reconciled (ops' spreadsheet)
+    value, tagging the source_note so the reconciliation is auditable.
+    """
+    reconciled = []
+    for row in registry_rows:
+        if row["zip"] in SEAM_ZIP_RESOLUTIONS:
+            reconciled.append({
+                "zip": row["zip"],
+                "zone": SEAM_ZIP_RESOLUTIONS[row["zip"]],
+                "effective_date": effective_date,
+                "source_note": "reconciled_round_rock_pflugerville_seam",
+            })
+        else:
+            reconciled.append(row)
+    return reconciled
