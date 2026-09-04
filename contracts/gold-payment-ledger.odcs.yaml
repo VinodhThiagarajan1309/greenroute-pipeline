@@ -1,0 +1,49 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: gold-payment-ledger
+name: gold_payment_ledger
+version: 1.0.0
+status: active
+description: >
+  The gold ledger finance reads. One row per (booking_id, capture_id,
+  settlement_date). Refund activity is aggregated onto the capture it
+  reverses, never onto the booking.
+domain: payments
+tenant: greenroute
+schema:
+  - table: gold_payment_ledger
+    physicalName: gold_payment_ledger
+    description: Partitioned on settlement_date.
+    partitionColumns:
+      - settlement_date
+    properties:
+      - name: booking_id
+        logicalType: string
+        physicalType: string
+        required: true
+      - name: capture_id
+        logicalType: string
+        physicalType: string
+        required: true
+      - name: settlement_date
+        logicalType: date
+        physicalType: date
+        required: true
+        partitionKeyPosition: 1
+      - name: captured_amount_cents
+        logicalType: integer
+        physicalType: bigint
+        required: true
+      - name: refunded_amount_cents
+        logicalType: integer
+        physicalType: bigint
+        required: true
+      - name: net_amount_cents
+        logicalType: integer
+        physicalType: bigint
+        required: true
+      - name: state
+        logicalType: string
+        physicalType: string
+        required: true
+        description: Explicit payment state, never derived from timestamp columns.

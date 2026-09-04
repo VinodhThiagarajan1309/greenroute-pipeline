@@ -1,0 +1,34 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: gold-schedule-events
+name: gold_schedule_events
+version: 1.0.0
+status: active
+description: >
+  Canonical schedule/booking lifecycle events (booked, rescheduled,
+  cancelled) that payments' auto-refund decision and finance reporting
+  both read.
+domain: scheduling
+tenant: greenroute
+schema:
+  - table: gold_schedule_events
+    physicalName: gold_schedule_events
+    properties:
+      - name: booking_id
+        logicalType: string
+        required: true
+      - name: event_type
+        logicalType: string
+        required: true
+        description: One of booked, rescheduled, cancelled.
+      - name: service_window_start
+        logicalType: date
+        physicalType: timestamp
+        required: true
+      - name: cancellation_threshold_hours
+        logicalType: number
+        required: false
+        description: Scheduling's authoritative chargeable/free cutoff, in hours before service_window_start.
+      - name: zone_id
+        logicalType: string
+        required: true

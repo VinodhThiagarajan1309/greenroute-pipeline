@@ -1,0 +1,11 @@
+# Maps each published ODCS contract to the OpenSpec capability that owns it.
+# Consumed by the CI schema-drift check (scripts/check_gold_contract_drift.py)
+# so a contract can never silently drift from the spec of the capability it
+# describes.
+links:
+  - contract: contracts/gold-payment-ledger.odcs.yaml
+    capability: payments
+    table: gold_payment_ledger
+  - contract: contracts/gold-schedule-events.odcs.yaml
+    capability: scheduling
+    table: gold_schedule_events
