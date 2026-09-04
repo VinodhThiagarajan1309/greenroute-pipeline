@@ -25,3 +25,13 @@ A booking referencing an unknown service type SHALL be quarantined, not defaulte
 - **WHEN** a booking referencing an unknown service type is exercised in a published window
 - **THEN** a booking referencing an unknown service type SHALL be quarantined, not defaulted
 - **AND** the outcome is visible in the job's emitted metrics
+
+### Requirement: Service type: declare whether it requires a licensed applicator
+
+A service type SHALL declare whether it requires a licensed applicator.
+
+#### Scenario: Declare whether it requires a licensed applicator
+
+- **WHEN** a service type is exercised in a published window
+- **THEN** a service type SHALL declare whether it requires a licensed applicator
+- **AND** the outcome is visible in the job's emitted metrics
