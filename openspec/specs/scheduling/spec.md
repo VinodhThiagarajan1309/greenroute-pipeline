@@ -65,3 +65,23 @@ A reschedule SHALL preserve the booking's identity and history, and SHALL NOT be
 - **WHEN** a reschedule is exercised in a published window
 - **THEN** a reschedule SHALL preserve the booking's identity and history, and SHALL NOT be represented internally as a cancellation followed by a new booking
 - **AND** the outcome is visible in the job's emitted metrics
+
+### Requirement: Scheduling: own both zone grouping and within-zone stop ordering
+
+Scheduling SHALL own both zone grouping and within-zone stop ordering for a day's route.
+
+#### Scenario: Own both zone grouping and within-zone stop ordering
+
+- **WHEN** scheduling is exercised in a published window
+- **THEN** scheduling SHALL own both zone grouping and within-zone stop ordering for a day's route
+- **AND** the outcome is visible in the job's emitted metrics
+
+### Requirement: Stop distance used for ordering: be computed as drive time
+
+Stop distance used for ordering SHALL be computed as drive time, not straight-line distance.
+
+#### Scenario: Be computed as drive time
+
+- **WHEN** stop distance used for ordering is exercised in a published window
+- **THEN** stop distance used for ordering SHALL be computed as drive time, not straight-line distance
+- **AND** the outcome is visible in the job's emitted metrics
