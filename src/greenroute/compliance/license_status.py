@@ -71,3 +71,15 @@ def match_technicians_to_licenses(technician_records, tda_records):
         tech["technician_id"]: match_technician_to_license(tech, by_license)
         for tech in technician_records
     }
+
+
+def carry_renewal_filed_date(tda_record):
+    """The TDA lookup returns renewal_filed_date alongside status; carry it
+    into silver_technician_compliance untouched so the scheduling gate can
+    compute the grace window at booking time instead of re-querying TDA."""
+    return {
+        "license_number": tda_record.get("license_number"),
+        "license_status": tda_record.get("license_status"),
+        "expiry_date": tda_record.get("expiry_date"),
+        "renewal_filed_date": tda_record.get("renewal_filed_date"),
+    }
