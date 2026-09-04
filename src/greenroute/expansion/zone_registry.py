@@ -75,3 +75,49 @@ def write_zone_registry(spark_rows):
     df = spark.createDataFrame(spark_rows, schema=zone_registry_schema())
     write_table(df, "zone_registry", mode="merge", key="zip")
     return df
+
+
+def migrate_legacy_mapping_to_registry(legacy_zip_to_zone, effective_date, source_note="migrated_from_legacy_sources"):
+    """Migrate a legacy zip->zone mapping (the routing dict, or the DAB
+    CSV) into zone_registry rows. zone_registry is now the single source
+    of truth for zip -> zone; this is the one-time migration path, not an
+    ongoing sync.
+    """
+    return [
+        {
+            "zip": zip_code,
+            "zone": zone,
+            "effective_date": effective_date,
+            "source_note": source_note,
+        }
+        for zip_code, zone in legacy_zip_to_zone.items()
+    ]
+
+
+# The 4 zips where the old routing dict / DAB CSV disagreed with ops'
+# spreadsheet, all in the Round Rock / Pflugerville seam -- exactly where
+# GreenRoute is expanding. Ops' spreadsheet is authoritative here.
+SEAM_ZIP_RESOLUTIONS = {
+    "78664": "pflugerville",
+    "78665": "round_rock",
+    "78681": "pflugerville",
+    "78660": "pflugerville",
+}
+
+
+def apply_seam_reconciliation(registry_rows, effective_date):
+    """Overwrite the seam zips' zone with the reconciled (ops' spreadsheet)
+    value, tagging the source_note so the reconciliation is auditable.
+    """
+    reconciled = []
+    for row in registry_rows:
+        if row["zip"] in SEAM_ZIP_RESOLUTIONS:
+            reconciled.append({
+                "zip": row["zip"],
+                "zone": SEAM_ZIP_RESOLUTIONS[row["zip"]],
+                "effective_date": effective_date,
+                "source_note": "reconciled_round_rock_pflugerville_seam",
+            })
+        else:
+            reconciled.append(row)
+    return reconciled
