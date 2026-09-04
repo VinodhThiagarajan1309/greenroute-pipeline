@@ -65,18 +65,44 @@ def run_recon(table_name, incremental_rows, batch_rows, key_fields, value_fields
     }
 
 
+INCONCLUSIVE = "INCONCLUSIVE"
+PASS = "PASS"
+FAIL = "FAIL"
+
+
+def classify_recon_result(incremental_row_count, batch_row_count, mismatch_count):
+    """Classify one recon result as PASS, FAIL, or INCONCLUSIVE.
+
+    This is the guard for the sprint-7 incident: a partition-pruning bug
+    built its predicate against the wrong column, both sides of the
+    comparison came back empty, and an empty-vs-empty comparison trivially
+    "passed" for four days because nothing was actually compared. An
+    empty-vs-empty comparison must report INCONCLUSIVE, never PASS -- PASS
+    means rows were actually checked and matched.
+    """
+    if incremental_row_count == 0 and batch_row_count == 0:
+        return INCONCLUSIVE
+    if mismatch_count > 0:
+        return FAIL
+    return PASS
+
+
 def recon_result_row(recon_result, checked_at):
     """Build one row of the recon result table: per-check row counts.
 
-    This is what gets written to the recon result table so dashboards can
-    show, per table and per run, how many rows were checked on each side and
-    how many mismatched -- not just a final pass/fail.
+    Status is classified via classify_recon_result so an empty-vs-empty
+    comparison is never reported as a silent PASS.
     """
+    status = classify_recon_result(
+        recon_result["incremental_row_count"],
+        recon_result["batch_row_count"],
+        recon_result["mismatch_count"],
+    )
     return {
         "table": recon_result["table"],
         "checked_at": checked_at,
         "incremental_row_count": recon_result["incremental_row_count"],
         "batch_row_count": recon_result["batch_row_count"],
         "mismatch_count": recon_result["mismatch_count"],
-        "status": "FAIL" if recon_result["mismatch_count"] else "PASS",
+        "status": status,
     }
