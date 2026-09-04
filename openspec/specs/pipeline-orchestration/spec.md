@@ -35,3 +35,23 @@ Every job SHALL be defined as bundle configuration in the repo; no job is config
 - **WHEN** every job is exercised in a published window
 - **THEN** every job SHALL be defined as bundle configuration in the repo; no job is configured through the workspace UI
 - **AND** the outcome is visible in the job's emitted metrics
+
+### Requirement: Backfill: merge on event key
+
+Backfill SHALL merge on event key and SHALL NOT reduce the row count of a previously published partition.
+
+#### Scenario: Merge on event key
+
+- **WHEN** backfill is exercised in a published window
+- **THEN** backfill SHALL merge on event key and SHALL NOT reduce the row count of a previously published partition
+- **AND** the outcome is visible in the job's emitted metrics
+
+### Requirement: CI: fail when an archived change's deltas do
+
+CI SHALL fail when an archived change's deltas do not reconcile against current capability specs.
+
+#### Scenario: Fail when an archived change's deltas do not reconcile
+
+- **WHEN** CI is exercised in a published window
+- **THEN** CI SHALL fail when an archived change's deltas do not reconcile against current capability specs
+- **AND** the outcome is visible in the job's emitted metrics
