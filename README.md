@@ -48,3 +48,24 @@ pytest
 Tests only exercise pure functions for now — no SparkSession fixture. We're two
 people in week one and we'd rather keep CI under a minute than have full coverage
 of code that doesn't exist yet.
+
+---
+
+## About this repository
+
+This is a **synthetic repository**, generated in a single session to illustrate what a
+quarter of OpenSpec practice looks like as it accumulates.
+
+GreenRoute is not a real company. The eight engineers named in the commit history are
+fictional, and their email addresses use `greenroute.example.com` - a domain reserved by
+RFC 2606 precisely so it can never belong to anyone. The commit dates are backdated; the
+pull requests and issues are real GitHub objects created in chronological order, so their
+numbering follows the story even though GitHub stamps their creation time with the day the
+repository was built.
+
+What is genuine: the code parses and the test suite passes, the OpenSpec artifacts follow
+the real grammar, and every requirement in `openspec/specs/` traces back to an archived
+change under `openspec/changes/archive/` that introduced it.
+
+Please don't cite it as evidence of anything except what a populated OpenSpec repository
+looks like from the outside.
