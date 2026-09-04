@@ -117,3 +117,13 @@ A blocked confirmation SHALL emit a metric identifying the technician and servic
 - **WHEN** a blocked confirmation is exercised in a published window
 - **THEN** a blocked confirmation SHALL emit a metric identifying the technician and service
 - **AND** the outcome is visible in the job's emitted metrics
+
+### Requirement: Reschedule path: send notifications through NotificationSender
+
+The reschedule path SHALL send notifications through `NotificationSender`, not a direct send call.
+
+#### Scenario: Send notifications through NotificationSender
+
+- **WHEN** the reschedule path is exercised in a published window
+- **THEN** the reschedule path SHALL send notifications through `NotificationSender`, not a direct send call
+- **AND** the outcome is visible in the job's emitted metrics
